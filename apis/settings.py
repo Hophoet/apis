@@ -31,6 +31,17 @@ DEBUG = os.environ.get('DEBUG_VALUE')
 ALLOWED_HOSTS = [ '127.0.0.1', 'hophoetapis.herokuapp.com']
 
 
+#enable logout with GET request
+ACCOUNT_LOGOUT_ON_GET = True
+
+APPEND_SLASH=False
+
+#to deseable to csrf token validation
+REST_FRAMEWORK = {
+'DEFAULT_AUTHENTICATION_CLASSES': (
+'rest_framework.authentication.TokenAuthentication',
+)
+}
 # Application definition
 
 INSTALLED_APPS = [
@@ -40,12 +51,23 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sites',
+
     'core',
     'contact',
     'rest_framework',
     'rest_framework.authtoken',
+    'rest_auth',
+    
+    'allauth',
+    'allauth.account',
+    'rest_auth.registration',
+    
+
 
 ]
+
+SITE_ID = 1
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
