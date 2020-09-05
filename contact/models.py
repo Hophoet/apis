@@ -9,8 +9,6 @@ User = get_user_model()
 #Company(entreprise) model
 class Company(models.Model):
     name = models.CharField(max_length=100)
-
-
     #model printing string
     def __str__(self):
         return self.name
@@ -22,8 +20,9 @@ class Client(models.Model):
     email = models.EmailField() 
     phone_number = models.CharField(max_length=100)
     company = models.ForeignKey(Company, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
 
     #model printting string
     def __str__(self):
-        return f'{self.first_name} {self.last_name}'
+        return f'{self.id} {self.first_name} {self.last_name}'
 
