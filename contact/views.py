@@ -54,7 +54,7 @@ class ContactsListView(APIView):
     #get request method
     def get(self, request, *args, **kwargs):
         #get of all the available clients
-        clients = Client.objects.all() 
+        clients = Client.objects.filter(user=request.user)
         contacts = contactsJsonBuilder(clients)
         #building the serializer with the get clients
         #return the response
@@ -71,7 +71,7 @@ class ContactDetailView(APIView):
         #build client and company object with client id
         client_id = kwargs.get('client_id')
         try:
-            client = Client.objects.get(id=client_id)
+            client = Client.objects.get(id=client_id, user=request.user)
         except ObjectDoesNotExist:
             return Response(status=HTTP_404_NOT_FOUND, data={'error':'contact not found'})
 
@@ -90,20 +90,40 @@ class ClientSearchView(APIView):
     def get(self, request, *args, **kwargs):
         #get of the url query parameter
         query = request.GET.get('query')
+        if query:
+            query = query.strip()
+        #query not provided as parameter case
+        if query is None:
+            message = {'details': f'contacts search parameter not provided'}
+            return Response(message, status=404)
+
         #check the existence of the query
         if not query:
             #return 4040 status error 
-            return Response(status=404)
+            message = {'details': f'enter a valid contacts search keyword'}
+            return Response(message, status=404)
 
         else:
+            query = query.strip()
             #search the clients by there first_name
-            clients = Client.objects.filter(first_name__icontains=query)
+            print('FIRST_NAME SEARCH')
+            clients = Client.objects.filter(first_name__icontains=query, user=request.user)
         if not clients.exists():
             #search the clients, there last_name
-            clients = Client.objects.filter(last_name__icontains=query)
+            print('LAST_NAME SEARCH')
+            clients = Client.objects.filter(last_name__icontains=query, user=request.user)
+        if not clients.exists():
+            #search the clients, there email
+            print('EMAIL SEARCH')
+            clients = Client.objects.filter(email__icontains=query, user=request.user)
+        if not clients.exists():
+            #search the clients, there phone number
+            print('PHONE NUMBER SEARCH')
+            clients = Client.objects.filter(phone_number__icontains=query, user=request.user)
         if not clients.exists():
             #return 4040 status error 
-            return Response(status=404)
+            message = {'details': f'contacts not found for {query}'}
+            return Response(message, status=404)
         #build serializer with the get clients
         clients = ClientSerializer(clients, many=True)
         #return the response
@@ -141,9 +161,14 @@ class AddContactView(APIView):
         try:
             company = Company.objects.get(name=company_name)
             Client.objects.create(
-                first_name=first_name, last_name=last_name, 
-                email=email, phone_number=phone_number, company=company
+                first_name=first_name, 
+                last_name=last_name, 
+                email=email, 
+                phone_number=phone_number, 
+                company=company,
+                user=request.user
             )
+            
         #company not exists yet case
         except ObjectDoesNotExist:
             company = Company.objects.create(name=company_name)
